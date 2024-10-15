@@ -144,11 +144,16 @@ ul.task-list li input[type="checkbox"] {
 #| viewerHeight: 600
 #| components: [viewer]
 
-from shiny import App, ui, render, reactive
 import pandas as pd
+import io
+from urllib.request import urlopen
 
-# Load the CSV file
-df = pd.read_csv("SLRDataDashboard.csv")
+# Load the CSV file from a URL
+csv_url = "https://github.com/jrgrohs/ROPESHubDashboard/blob/main/SLRDataDashboard.csv"
+response = urlopen(csv_url)
+csv_data = response.read().decode('utf-8')
+df = pd.read_csv(io.StringIO(csv_data))
+
 
 app_ui = ui.page_fluid(
     ui.panel_title("Systematic Literature Review Dashboard"),
