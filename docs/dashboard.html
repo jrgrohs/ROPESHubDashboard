@@ -39,6 +39,11 @@ ul.task-list li input[type="checkbox"] {
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
 <link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<meta name="shinylive:serviceworker_dir" content=".">
+<script src="site_libs/quarto-contrib/shinylive-0.7.0/shinylive/load-shinylive-sw.js" type="module"></script>
+<script src="site_libs/quarto-contrib/shinylive-0.7.0/shinylive/run-python-blocks.js" type="module"></script>
+<link href="site_libs/quarto-contrib/shinylive-0.7.0/shinylive/shinylive.css" rel="stylesheet">
+<link href="site_libs/quarto-contrib/shinylive-quarto-css/shinylive-quarto.css" rel="stylesheet">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -107,14 +112,8 @@ ul.task-list li input[type="checkbox"] {
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        <nav id="TOC" role="doc-toc" class="toc-active">
-    <h2 id="toc-title">On this page</h2>
-   
-  <ul>
-  <li><a href="#load-the-csv-file" id="toc-load-the-csv-file" class="nav-link active" data-scroll-target="#load-the-csv-file">Load the CSV file</a></li>
-  </ul>
-</nav>
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
+        
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -138,34 +137,64 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<p>```arrwxvcuzdkvxvlodb #| standalone: true #| viewerHeight: 600 #| components: [viewer]</p>
-<p>from shiny import App, ui, render, reactive import pandas as pd</p>
-<section id="load-the-csv-file" class="level1">
-<h1>Load the CSV file</h1>
-<p>df = pd.read_csv(“SLRDataDashboard.csv”)</p>
-<p>app_ui = ui.page_fluid( ui.panel_title(“Systematic Literature Review Dashboard”), ui.layout_sidebar( ui.sidebar( ui.input_text(“title_search”, “Search in Title”, placeholder=“Enter keywords”), ui.input_select( “venue_filter”, “Publication Venue”, choices=[“All”] + list(df[“publication_venue”].unique()), ), width=250, ), ui.card( ui.card_header(“Filtered Papers”), ui.output_data_frame(“papers_table”), ), ), )</p>
-<p>def server(input, output, session): <span class="citation" data-cites="reactive.calc">@reactive.calc</span> def filtered_data(): data = df.copy()</p>
-<pre><code>    if input.title_search():
-        data = data[data["title"].str.contains(input.title_search(), case=False)]
-    
-    if input.venue_filter() != "All":
-        data = data[data["publication_venue"] == input.venue_filter()]
-    
-    return data
+<pre class="shinylive-python" data-engine="python"><code>#| '!! shinylive warning !!': |
+#|   shinylive does not work in self-contained HTML documents.
+#|   Please set `embed-resources: false` in your metadata.
+#| standalone: true
+#| viewerHeight: 600
+#| components: [viewer]
 
-@output
-@render.data_frame
-def papers_table():
-    return render.DataGrid(
-        filtered_data(),
-        row_selection_mode="multiple",
-        width="100%",
-        height="100%",
-    )</code></pre>
-<p>app = App(app_ui, server) ’’’</p>
+from shiny import App, ui, render, reactive
+import pandas as pd
+
+# Load the CSV file
+df = pd.read_csv("SLRDataDashboard.csv")
+
+app_ui = ui.page_fluid(
+    ui.panel_title("Systematic Literature Review Dashboard"),
+    ui.layout_sidebar(
+        ui.sidebar(
+            ui.input_text("title_search", "Search in Title", placeholder="Enter keywords"),
+            ui.input_select(
+                "venue_filter",
+                "Publication Venue",
+                choices=["All"] + list(df["publication_venue"].unique()),
+            ),
+            width=250,
+        ),
+        ui.card(
+            ui.card_header("Filtered Papers"),
+            ui.output_data_frame("papers_table"),
+        ),
+    ),
+)
+
+def server(input, output, session):
+    @reactive.calc
+    def filtered_data():
+        data = df.copy()
+        
+        if input.title_search():
+            data = data[data["title"].str.contains(input.title_search(), case=False)]
+        
+        if input.venue_filter() != "All":
+            data = data[data["publication_venue"] == input.venue_filter()]
+        
+        return data
+
+    @output
+    @render.data_frame
+    def papers_table():
+        return render.DataGrid(
+            filtered_data(),
+            row_selection_mode="multiple",
+            width="100%",
+            height="100%",
+        )
+
+app = App(app_ui, server)</code></pre>
 
 
-</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
