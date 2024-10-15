@@ -9,9 +9,18 @@ title: "ROPES Hub Dashboard"
 
 from shiny import App, ui, render, reactive
 import pandas as pd
+import io
 
-# Load the CSV file
-df = pd.read_csv("www/SLRDataDashboard.csv")
+# Sample data - tab-separated
+data = """
+Study_ID	Title	Author	Year	Product	Kind_of_paper	Journal_Conference	Grouping
+TemplerRodrigues 2022	A Qualitative Evaluation of the Missouri State University S-STEM Program Highlighting the Importance of Taking an Intersectional Approach in Program Evaluations.	Templer Rodrigues	2022	Journal article	Overview of program	Journal of STEM Education: Innovations & Research	STEM Education Journal
+Wright 2021	Increasing Retention of STEM Students with Financial Need via the NSF S-STEM DESIRE Scholarship Program.	Wright	2021	Journal article	Overview of program	Journal of STEM Education: Innovations & Research	STEM Education Journal
+Kalevitch 2015	Building a Community of Scholars: One University's Story of Students Engaged in Learning Science, Mathematics, and Engineering Through a NSF S-STEM Grant - Part II.	Kalevitch	2015	Journal article	Overview of program	Journal of STEM Education: Innovations & Research	STEM Education Journal
+"""
+
+# Convert the tab-separated string to a DataFrame
+df = pd.read_csv(io.StringIO(data.strip()), sep='\t')
 
 app_ui = ui.page_fluid(
     ui.panel_title("Systematic Literature Review Dashboard"),
@@ -19,9 +28,9 @@ app_ui = ui.page_fluid(
         ui.sidebar(
             ui.input_text("title_search", "Search in Title", placeholder="Enter keywords"),
             ui.input_select(
-                "venue_filter",
-                "Publication Venue",
-                choices=["All"] + list(df["publication_venue"].unique()),
+                "product_filter",
+                "Product",
+                choices=["All"] + list(df["Product"].unique()),
             ),
             width=250,
         ),
@@ -38,10 +47,10 @@ def server(input, output, session):
         data = df.copy()
         
         if input.title_search():
-            data = data[data["title"].str.contains(input.title_search(), case=False)]
+            data = data[data["Title"].str.contains(input.title_search(), case=False)]
         
-        if input.venue_filter() != "All":
-            data = data[data["publication_venue"] == input.venue_filter()]
+        if input.product_filter() != "All":
+            data = data[data["Product"] == input.product_filter()]
         
         return data
 
