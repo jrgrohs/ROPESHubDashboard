@@ -7,111 +7,52 @@ title: "ROPES Hub Dashboard"
 #| viewerHeight: 600
 #| components: [viewer]
 
-from shiny import App, render, ui, reactive
-import random
-import asyncio
-import io
-import math
-import string
-from datetime import datetime
-from pathlib import Path
+from shiny import App, ui, render, reactive
+import pandas as pd
 
-def generate_random_letters(length):
-    # Generate a random string of letters of specified length
-    return ''.join(random.choice(string.ascii_lowercase) for _ in range(length))  
-
-problem_ID="381"
-L=reactive.Value("__")
-d=reactive.Value("__")
-F1=reactive.Value("__")
-F2=reactive.Value("__")
-F3=reactive.Value("__")
-  
-attempts=["Timestamp,Attempt,Answer,Feedback\n"]
+# Load the CSV file
+df = pd.read_csv("SLRDataDashboard.csv")
 
 app_ui = ui.page_fluid(
-    ui.markdown("**Please enter your ID number from your instructor and click to generate your problem**"),
-    ui.input_text("ID","", placeholder="Enter ID Number Here"),
-    ui.input_action_button("generate_problem", "Generate Problem", class_="btn-primary"),
-    ui.markdown("**Problem Statement**"),
-    ui.output_ui("ui_problem_statement"),
-    ui.input_text("answer","Your Answer in units of mm", placeholder="Please enter your answer"),
-    ui.input_action_button("submit", "Submit Answer", class_="btn-primary"),
-    ui.download_button("download", "Download File to Submit", class_="btn-success"),
+    ui.panel_title("Systematic Literature Review Dashboard"),
+    ui.layout_sidebar(
+        ui.sidebar(
+            ui.input_text("title_search", "Search in Title", placeholder="Enter keywords"),
+            ui.input_select(
+                "venue_filter",
+                "Publication Venue",
+                choices=["All"] + list(df["publication_venue"].unique()),
+            ),
+            width=250,
+        ),
+        ui.card(
+            ui.card_header("Filtered Papers"),
+            ui.output_data_frame("papers_table"),
+        ),
+    ),
 )
 
 def server(input, output, session):
-    # Initialize a counter for attempts
-    attempt_counter = reactive.Value(0)
+    @reactive.calc
+    def filtered_data():
+        data = df.copy()
+        
+        if input.title_search():
+            data = data[data["title"].str.contains(input.title_search(), case=False)]
+        
+        if input.venue_filter() != "All":
+            data = data[data["publication_venue"] == input.venue_filter()]
+        
+        return data
 
     @output
-    @render.ui
-    def ui_problem_statement():
-        return[ui.markdown(f"A 4-m-long beam is constructed by nailing together two wooden boards as shown. The nails each have a diameter d = {d()} mm and can withstand a shear stress of 100 MPa. If loads F<sub>1</sub> = {F1()} kN, F<sub>2</sub> = {F2()} kN, and F<sub>3</sub> = {F3()} kN, determine the maximum permissable spacing between the nails.")]
-    
-    @reactive.Effect
-    @reactive.event(input.generate_problem)
-    def randomize_vars():
-        random.seed(input.ID())
-        d.set(random.randrange(5, 15, 1))
-        F1.set(random.randrange(2, 20, 1))
-        F2.set(random.randrange(2, 20, 1))
-        F3.set(random.randrange(2, 20, 1))
-        
-    @reactive.Effect
-    @reactive.event(input.submit)
-    def _():
-        attempt_counter.set(attempt_counter() + 1)  # Increment the attempt counter on each submission.
-        V1 = F1()+F3()-F2()
-        V2 = V1-F1()
-        V3 = V2+F2()
-        Vmax = max(abs(V1), abs(V2), abs(V3))
-        I = 11.52*10**-6
-        Q = 1.28*10**-4
-        Taub = Vmax*Q/(I*0.08)
-        instr= (100000*(d()/1000/2)**2*math.pi)/(Taub*0.08)*1000
-        if math.isclose(float(input.answer()), instr, rel_tol=0.01):
-            check = "*Correct*"
-            correct_indicator = "JL"
-        else:
-            check = "*Not Correct.*"
-            correct_indicator = "JG"
-
-        # Generate random parts for the encoded attempt.
-        random_start = generate_random_letters(4)
-        random_middle = generate_random_letters(4)
-        random_end = generate_random_letters(4)
-        encoded_attempt = f"{random_start}{problem_ID}-{random_middle}{attempt_counter()}{correct_indicator}-{random_end}{input.ID()}"
-
-        # Store the most recent encoded attempt in a reactive value so it persists across submissions
-        session.encoded_attempt = reactive.Value(encoded_attempt)
-
-        # Append the attempt data to the attempts list without the encoded attempt
-        attempts.append(f"{datetime.now()}, {attempt_counter()}, {input.answer()}, {check}\n")
-
-        # Show feedback to the user.
-        feedback = ui.markdown(f"Your answer of {input.answer()} is {check}.")
-        m = ui.modal(
-            feedback,
-            title="Feedback",
-            easy_close=True
+    @render.data_frame
+    def papers_table():
+        return render.DataGrid(
+            filtered_data(),
+            row_selection_mode="multiple",
+            width="100%",
+            height="100%",
         )
-        ui.modal_show(m)
 
-    @session.download(filename=lambda: f"Problem_Log-{problem_ID}-{input.ID()}.csv")
-    async def download():
-        # Start the CSV with the encoded attempt (without label)
-        final_encoded = session.encoded_attempt() if session.encoded_attempt is not None else "No attempts"
-        yield f"{final_encoded}\n\n"
-        
-        # Write the header for the remaining CSV data once
-        yield "Timestamp,Attempt,Answer,Feedback\n"
-        
-        # Write the attempts data, ensure that the header from the attempts list is not written again
-        for attempt in attempts[1:]:  # Skip the first element which is the header
-            await asyncio.sleep(0.25)  # This delay may not be necessary; adjust as needed
-            yield attempt
-
-# App installation
 app = App(app_ui, server)
-```
