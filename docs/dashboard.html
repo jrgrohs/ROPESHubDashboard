@@ -158,7 +158,24 @@ FANG 2019   Impacts of Industry Seminars and a Student Design Competition in an 
 """
 
 # Convert the tab-separated string to a DataFrame
-df = pd.read_csv(io.StringIO(data.strip()), sep='\t')
+try:
+    df = pd.read_csv(io.StringIO(data.strip()), sep='\t')
+    print("Data loaded successfully. Shape:", df.shape)
+    print("Columns:", df.columns.tolist())
+except Exception as e:
+    print("Error loading data:", str(e))
+    df = pd.DataFrame()  # Create an empty DataFrame if loading fails
+
+def get_unique_values(column_name):
+    if column_name in df.columns:
+        return ["All"] + sorted(df[column_name].unique().tolist())
+    else:
+        print(f"Warning: Column '{column_name}' not found in DataFrame")
+        return ["All"]
+
+# Debug: Print unique values for each column
+for column in ['Product', 'Kind_of_paper', 'Grouping']:
+    print(f"Unique values in {column}:", get_unique_values(column))
 
 app_ui = ui.page_fluid(
     ui.panel_title("Systematic Literature Review Dashboard"),
@@ -169,17 +186,17 @@ app_ui = ui.page_fluid(
             ui.input_select(
                 "product_filter",
                 "Product",
-                choices=["All"] + list(df["Product"].unique()),
+                choices=get_unique_values("Product"),
             ),
             ui.input_select(
                 "kind_of_paper_filter",
                 "Kind of Paper",
-                choices=["All"] + list(df["Kind_of_paper"].unique()),
+                choices=get_unique_values("Kind_of_paper"),
             ),
             ui.input_select(
                 "grouping_filter",
                 "Grouping",
-                choices=["All"] + list(df["Grouping"].unique()),
+                choices=get_unique_values("Grouping"),
             ),
             width=300,
         ),
@@ -201,13 +218,13 @@ def server(input, output, session):
         if input.journal_search():
             data = data[data["Journal_Conference"].str.contains(input.journal_search(), case=False)]
         
-        if input.product_filter() != "All":
+        if input.product_filter() != "All" and "Product" in data.columns:
             data = data[data["Product"] == input.product_filter()]
         
-        if input.kind_of_paper_filter() != "All":
+        if input.kind_of_paper_filter() != "All" and "Kind_of_paper" in data.columns:
             data = data[data["Kind_of_paper"] == input.kind_of_paper_filter()]
         
-        if input.grouping_filter() != "All":
+        if input.grouping_filter() != "All" and "Grouping" in data.columns:
             data = data[data["Grouping"] == input.grouping_filter()]
         
         return data
