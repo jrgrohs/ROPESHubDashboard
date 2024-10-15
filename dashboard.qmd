@@ -361,7 +361,9 @@ except Exception as e:
 
 def get_unique_values(column_name):
     if column_name in df.columns:
-        return ["All"] + sorted(df[column_name].unique().tolist())
+        # Convert all values to strings before sorting
+        unique_values = df[column_name].astype(str).unique().tolist()
+        return ["All"] + sorted(unique_values)
     else:
         print(f"Warning: Column '{column_name}' not found in DataFrame")
         return ["All"]
@@ -412,13 +414,13 @@ def server(input, output, session):
             data = data[data["Journal_Conference"].str.contains(input.journal_search(), case=False)]
         
         if input.product_filter() != "All" and "Product" in data.columns:
-            data = data[data["Product"] == input.product_filter()]
+            data = data[data["Product"].astype(str) == input.product_filter()]
         
         if input.kind_of_paper_filter() != "All" and "Kind_of_paper" in data.columns:
-            data = data[data["Kind_of_paper"] == input.kind_of_paper_filter()]
+            data = data[data["Kind_of_paper"].astype(str) == input.kind_of_paper_filter()]
         
         if input.grouping_filter() != "All" and "Grouping" in data.columns:
-            data = data[data["Grouping"] == input.grouping_filter()]
+            data = data[data["Grouping"].astype(str) == input.grouping_filter()]
         
         return data
 
