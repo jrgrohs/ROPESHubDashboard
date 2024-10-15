@@ -2,13 +2,16 @@ project:
   type: website
   output-dir: docs
 
+#filters:
+#  - shinylive
+
 website:
   title: "ROPESHubDashboard"
   navbar:
     left:
       - href: index.qmd
         text: Home
-      - about.qmd
+      - dashboard.qmd
 
 format:
   html:
