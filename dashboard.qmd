@@ -10,19 +10,19 @@ from shiny import App, ui, render, reactive
 import pandas as pd
 import io
 
-# Sample data - using '|||' as a delimiter
+# Sample data - using comma as a delimiter
 data = """
-Study_ID|||Title|||Author|||Year|||Product|||Kind_of_paper|||Journal_Conference|||Grouping
-TemplerRodrigues 2022|||A Qualitative Evaluation of the Missouri State University S-STEM Program Highlighting the Importance of Taking an Intersectional Approach in Program Evaluations.|||Templer Rodrigues|||2022|||Journal article|||Overview of program|||Journal of STEM Education: Innovations & Research|||STEM Education Journal
-Wright 2021|||Increasing Retention of STEM Students with Financial Need via the NSF S-STEM DESIRE Scholarship Program.|||Wright|||2021|||Journal article|||Overview of program|||Journal of STEM Education: Innovations & Research|||STEM Education Journal
-Kalevitch 2015|||Building a Community of Scholars: One University's Story of Students Engaged in Learning Science, Mathematics, and Engineering Through a NSF S-STEM Grant - Part II.|||Kalevitch|||2015|||Journal article|||Overview of program|||Journal of STEM Education: Innovations & Research|||STEM Education Journal
-Wilson 2012|||Increasing Access for Economically Disadvantaged Students: The NSF/CSEM & S-STEM Programs at Louisiana State University.|||Wilson|||2012|||Journal article|||Overview of program|||Journal of Science Education & Technology|||Science Education Journal
-FANG 2019|||Impacts of Industry Seminars and a Student Design Competition in an Engineering Education Scholarship Program.|||Fang|||2019|||Journal article|||Research/evaluation|||International Journal of Engineering Education|||Engineering Education Journal
+Study_ID,Title,Author,Year,Product,Kind_of_paper,Journal_Conference,Grouping
+TemplerRodrigues 2022,A Qualitative Evaluation of the Missouri State University S-STEM Program Highlighting the Importance of Taking an Intersectional Approach in Program Evaluations.,Templer Rodrigues,2022,Journal article,Overview of program,Journal of STEM Education: Innovations & Research,STEM Education Journal
+Wright 2021,Increasing Retention of STEM Students with Financial Need via the NSF S-STEM DESIRE Scholarship Program.,Wright,2021,Journal article,Overview of program,Journal of STEM Education: Innovations & Research,STEM Education Journal
+Kalevitch 2015,Building a Community of Scholars: One University's Story of Students Engaged in Learning Science Mathematics and Engineering Through a NSF S-STEM Grant - Part II.,Kalevitch,2015,Journal article,Overview of program,Journal of STEM Education: Innovations & Research,STEM Education Journal
+Wilson 2012,Increasing Access for Economically Disadvantaged Students: The NSF/CSEM & S-STEM Programs at Louisiana State University.,Wilson,2012,Journal article,Overview of program,Journal of Science Education & Technology,Science Education Journal
+FANG 2019,Impacts of Industry Seminars and a Student Design Competition in an Engineering Education Scholarship Program.,Fang,2019,Journal article,Research/evaluation,International Journal of Engineering Education,Engineering Education Journal
 """
 
-# Convert the custom-delimited string to a DataFrame
+# Convert the CSV string to a DataFrame
 try:
-    df = pd.read_csv(io.StringIO(data.strip()), sep='|||', engine='python')
+    df = pd.read_csv(io.StringIO(data.strip()))
     print("Data loaded successfully. Shape:", df.shape)
     print("Columns:", df.columns.tolist())
 except Exception as e:
