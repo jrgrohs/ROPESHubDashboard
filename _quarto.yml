@@ -2,8 +2,8 @@ project:
   type: website
   output-dir: docs
 
-#filters:
-#  - shinylive
+filters:
+  - shinylive
 
 website:
   title: "ROPESHubDashboard"
