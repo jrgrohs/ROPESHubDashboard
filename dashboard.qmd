@@ -351,26 +351,10 @@ Strategies and Initiatives That Revitalize Wesley College STEM Programs,D'Souza,
 """
 
 # Convert the CSV string to a DataFrame
-try:
-    df = pd.read_csv(io.StringIO(data.strip()))
-    print("Data loaded successfully. Shape:", df.shape)
-    print("Columns:", df.columns.tolist())
-except Exception as e:
-    print("Error loading data:", str(e))
-    df = pd.DataFrame()  # Create an empty DataFrame if loading fails
+df = pd.read_csv(io.StringIO(data.strip()))
 
 def get_unique_values(column_name):
-    if column_name in df.columns:
-        # Convert all values to strings before sorting
-        unique_values = df[column_name].astype(str).unique().tolist()
-        return ["All"] + sorted(unique_values)
-    else:
-        print(f"Warning: Column '{column_name}' not found in DataFrame")
-        return ["All"]
-
-# Debug: Print unique values for each column
-for column in ['Product', 'Kind_of_paper', 'Grouping']:
-    print(f"Unique values in {column}:", get_unique_values(column))
+    return ["All"] + sorted(df[column_name].astype(str).unique().tolist())
 
 app_ui = ui.page_fluid(
     ui.panel_title("Systematic Literature Review Dashboard"),
@@ -378,28 +362,20 @@ app_ui = ui.page_fluid(
         ui.sidebar(
             ui.input_text("title_search", "Search in Title", placeholder="Enter keywords"),
             ui.input_text("journal_search", "Search in Journal/Conference", placeholder="Enter keywords"),
-            ui.input_select(
-                "product_filter",
-                "Product",
-                choices=get_unique_values("Product"),
-            ),
-            ui.input_select(
-                "kind_of_paper_filter",
-                "Kind of Paper",
-                choices=get_unique_values("Kind_of_paper"),
-            ),
-            ui.input_select(
-                "grouping_filter",
-                "Grouping",
-                choices=get_unique_values("Grouping"),
-            ),
-            width=300,
+            ui.input_select("product_filter", "Product", choices=get_unique_values("Product")),
+            ui.input_select("kind_of_paper_filter", "Kind of Paper", choices=get_unique_values("Kind_of_paper")),
+            ui.input_select("grouping_filter", "Grouping", choices=get_unique_values("Grouping")),
+            width="300px"
         ),
-        ui.card(
-            ui.card_header("Filtered Papers"),
-            ui.output_data_frame("papers_table"),
-        ),
+        ui.output_data_frame("papers_table"),
     ),
+    ui.tags.style("""
+        .shiny-data-frame-container {
+            overflow-x: auto;
+            max-width: 100%;
+            height: calc(100vh - 100px);
+        }
+    """)
 )
 
 def server(input, output, session):
@@ -413,13 +389,13 @@ def server(input, output, session):
         if input.journal_search():
             data = data[data["Journal_Conference"].str.contains(input.journal_search(), case=False)]
         
-        if input.product_filter() != "All" and "Product" in data.columns:
+        if input.product_filter() != "All":
             data = data[data["Product"].astype(str) == input.product_filter()]
         
-        if input.kind_of_paper_filter() != "All" and "Kind_of_paper" in data.columns:
+        if input.kind_of_paper_filter() != "All":
             data = data[data["Kind_of_paper"].astype(str) == input.kind_of_paper_filter()]
         
-        if input.grouping_filter() != "All" and "Grouping" in data.columns:
+        if input.grouping_filter() != "All":
             data = data[data["Grouping"].astype(str) == input.grouping_filter()]
         
         return data
