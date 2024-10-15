@@ -7,6 +7,7 @@ title: "ROPES Hub Dashboard"
 #| viewerHeight: 600
 #| components: [viewer]
 
+from shiny import App, ui, render, reactive
 import pandas as pd
 import io
 from urllib.request import urlopen
